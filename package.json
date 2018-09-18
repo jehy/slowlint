@@ -3,7 +3,7 @@
   "bin": {
     "slowlint": "bin/bin.js"
   },
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Slowly implement linting",
   "repository": {
     "type": "git",

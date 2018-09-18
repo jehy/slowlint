@@ -14,8 +14,13 @@ function debug(...args)
 
 function getIgnoredFiles(files) {
   try {
-    return fs.readFileSync(ignoreTemporaryFileName, 'utf-8')
-      .split('\n')
+    const allIgnored = fs.readFileSync(ignoreTemporaryFileName, 'utf-8')
+      .split('\n');
+    if (files[0] === '.')
+    {
+      return allIgnored;
+    }
+    return allIgnored
       .filter(fname=>files.some(fileOption=>fname.startsWith(fileOption)));
   }
   catch (e) {
@@ -31,8 +36,13 @@ function getIgnoredForeverFiles(files) {
     {
       return [];
     }
-    return fs.readFileSync(ignoreForeverFileName, 'utf-8')
-      .split('\n')
+    const allIgnored =  fs.readFileSync(ignoreForeverFileName, 'utf-8')
+      .split('\n');
+    if (files[0] === '.')
+    {
+      return allIgnored;
+    }
+    return allIgnored
       .filter(fname=>files.some(fileOption=>fname.startsWith(fileOption)));
   }
   catch (e) {
