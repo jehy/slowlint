@@ -1,0 +1,41 @@
+{
+  "name": "slowlint",
+  "bin": {
+    "slowlint": "bin/bin.js"
+  },
+  "version": "1.0.2",
+  "description": "Slowly implement linting",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jehy/slowlint.git"
+  },
+  "main": "slowlint.js.js",
+  "scripts": {
+    "lint": "./node_modules/.bin/eslint slowlint.js test bin",
+    "test": "npm run lint && mocha -t 10000 --exit",
+    "check_coverage": "nyc check-coverage --lines 80 --functions 80 --branches 80",
+    "coverage": "nyc npm test && npm run check_coverage",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls"
+  },
+  "author": "Jehy http://github.com/jehy",
+  "dependencies": {
+    "performance-now": "^2.1.0",
+    "yargs": "^12.0.2"
+  },
+  "devDependencies": {
+    "coveralls": "^3.0.2",
+    "eslint": "^5.6.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-loader": "^2.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "mocha": "^5.2.0",
+    "chai": "^4.1.2",
+    "nyc": "^13.0.1"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "license": "MIT"
+}
