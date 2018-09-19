@@ -7,6 +7,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/jehy/slowlint/badge.svg)](https://snyk.io/test/github/jehy/slowlint)
 
 ![our pride logo](logo.png)
+
 Implement linting with ESLint slowly on big projects.
 
 ## WTF
