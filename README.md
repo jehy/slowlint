@@ -1,4 +1,4 @@
-# SlowLint
+# Slowlint
 
 [![Build Status](https://travis-ci.org/jehy/slowlint.svg?branch=master)](https://travis-ci.org/jehy/slowlint)
 [![dependencies Status](https://david-dm.org/jehy/slowlint/status.svg)](https://david-dm.org/jehy/slowlint)
@@ -12,28 +12,43 @@ Implement linting with ESLint slowly on big projects.
 
 ## WTF
 
-Sometimes you need to add linting to existing projects. And you have to take it slowly to avoid many merge conflicts.
+Sometimes you need to add linting to existing projects.
+And you have to take it lazy to avoid many merge conflicts, failing builds and etc.
 
-That's where slowLint saves the day.
+That's where Slowlint saves the day.
 
-What can it do:
+How it is supposed to work:
 
-### 1. Generate now.eslintignore file
+1. You add ESLint, ESLint config and `.eslintignore` to project as usual.
+2. You run Slowlint to make a file with all temporary ignores (files which don't pass linting).
+3. You add two checks to your CI on every commit:
+    * check that all good files still pass linting
+    * check that bad files did not become good
+    
+This is the least invasive way to ensure that your code will not become worse and will
+lazily become better.
+
+## Step by step
+
+### 1. ESLint setup
+Install ESLint, plugins, set up config, `.eslintignore` and etc - just as usual.
+
+### 2. Generate .slowlintignore file
 
 That's same as `.eslintignore` but with another name. Why bother?
 
-* `now.eslintignore` only contains files which could be fixed. Files from `.eslintignore` are not meant to be fixed.
-* Any IDE will use `.eslintignore` and ignore `now.eslintignore` - just as planned!
-* You can use both `.eslintignore` and `now.eslintignore`.
+* `.slowlintignore` only contains files which could be fixed. Files from `.eslintignore` are not meant to be fixed.
+* Any IDE will use `.eslintignore` and ignore `.slowlintignore` - just as planned!
+* You can use both `.eslintignore` and `.slowlintignore`.
 
 **Example**
 ```bash
 slowlint save-ignored --files src test --eslint-path ~/project1/node_modules/eslint
 ```
 
-### 2. Lint
+### 3. Lint
 
-SlowLint can use your existing ESLint package and configuration for linting with both `.eslintignore` and`now.eslintignore` files.
+Slowlint can use your existing ESLint package and configuration for linting with both `.eslintignore` and`.slowlintignore` files.
 
 That's great for CI!
 
@@ -42,9 +57,9 @@ That's great for CI!
 slowlint lint --files src test --eslint-path ~/project1/node_modules/eslint
 ```
 
-### 3. Check for good files
+### 4. Check for good files
 
-SlowLint can also check if good files (which pass linting) are included in `now.eslintignore` file.
+Slowlint can also check if good files (which pass linting) are included in `.slowlintignore` file.
 
 **Example**
 ```bash
@@ -61,7 +76,7 @@ npm i slowlint --save-dev
 npm i -g slowlint
 
 // or simply run with npx
-npx slow lintcheck-good --files src test --eslint-path ~/project1/node_modules/eslint
+npx slowlint check-good --files src test --eslint-path ~/project1/node_modules/eslint
 
 ```
 
@@ -76,8 +91,9 @@ Commands:
   slowlint save-ignored  Make a new list of ignored files
 
 Options:
-  --version           Show version number                              [boolean]
-  --files, -f         filenames                               [array] [required]
-  --eslintPath, -es   eslint path                            [string] [required]
-  --help, h          Show help                                        [boolean]
+  --version           Show version number                      [boolean]
+  --files             filenames                                [array]  [required]
+  --eslintPath        eslint path                              [string] [required]
+  --ignoreFilePath    path for .slowlintignore file            [string]
+  --help, h           Show help                                [boolean]
 ```

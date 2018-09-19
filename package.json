@@ -3,13 +3,13 @@
   "bin": {
     "slowlint": "bin/bin.js"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Slowly implement linting",
   "repository": {
     "type": "git",
     "url": "git@github.com:jehy/slowlint.git"
   },
-  "main": "slowlint.js.js",
+  "main": "slowlint.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint slowlint.js test bin",
     "test": "npm run lint && mocha -t 10000 --exit",

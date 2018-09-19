@@ -4,7 +4,6 @@ const fs = require('fs');
 
 const path = require('path');
 
-const ignoreTemporaryFileName = 'now.eslintignore';
 const ignoreForeverFileName = '.eslintignore';
 
 function debug(...args)
@@ -12,16 +11,16 @@ function debug(...args)
   console.log(args.join(' '));
 }
 
-function getIgnoredFiles(files) {
+function getIgnoredFiles(files, ignoreFilePath) {
   try {
-    const allIgnored = fs.readFileSync(ignoreTemporaryFileName, 'utf-8')
+    const allIgnored = fs.readFileSync(ignoreFilePath, 'utf-8')
       .split('\n');
     if (files[0] === '.')
     {
       return allIgnored;
     }
     return allIgnored
-      .filter(fname=>files.some(fileOption=>fname.startsWith(fileOption)));
+      .filter(fname=>files.some(fileOption=>path.resolve(fname).startsWith(fileOption)));
   }
   catch (e) {
     debug(e);
@@ -43,7 +42,7 @@ function getIgnoredForeverFiles(files) {
       return allIgnored;
     }
     return allIgnored
-      .filter(fname=>files.some(fileOption=>fname.startsWith(fileOption)));
+      .filter(fname=>files.some(fileOption=>path.resolve(fname).startsWith(fileOption)));
   }
   catch (e) {
     debug(e);
@@ -56,6 +55,7 @@ function getIgnoredForeverFiles(files) {
  * @param {Object} [options]
  * @param {boolean} [options.ignoreBad] do not check bad files
  * @param {string} [options.eslintPath] path to ESLint
+ * @param {string} [options.ignoreFilePath] path to slowlint ignore file
  * @param {Array[String]} [options.files] array of files to check
  * @returns {Object} bad files's filenames and a number of good files
  */
@@ -65,13 +65,12 @@ function lintAll(options = {}) {
   // eslint-disable-next-line global-require,import/no-dynamic-require
   const {CLIEngine} = require(eslintPath);
   const opts = {
-    // envs: ['mocha', 'node'],
     useEslintrc: true,
   };
   let ignoredFilesNum = 0;
   opts.ignorePattern = getIgnoredForeverFiles(options.files);
   if (options.ignoreBad) {
-    const ignoredFiles = getIgnoredFiles(options.files);
+    const ignoredFiles = getIgnoredFiles(options.files, options.ignoreFilePath);
     ignoredFilesNum = ignoredFiles.length;
     opts.ignorePattern = opts.ignorePattern.concat(ignoredFiles);
   }
@@ -116,5 +115,4 @@ module.exports = {
   getIgnoredFiles,
   getIgnoredForeverFiles,
   ignoreForeverFileName,
-  ignoreTemporaryFileName,
 };

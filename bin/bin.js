@@ -11,30 +11,27 @@ const path = require('path');
 const {
   lintAll,
   getIgnoredFiles,
-  ignoreTemporaryFileName,
 } = require('../slowlint');
 
-function debug(...args)
-{
+function debug(...args) {
   console.log(args.join(' '));
 }
 
-function saveIgnored(files, eslintPath)
-{
+function saveIgnored(files, eslintPath, ignoreFilePath) {
   const start = now();
-  const smallReport = lintAll({files, eslintPath});
+  const smallReport = lintAll({files, eslintPath, ignoreFilePath});
   debug(`Linter passing: ${smallReport.goodFilesNum}`);
   debug(`Linter not passing: ${smallReport.badFilesNum}`);
-  fs.writeFileSync(ignoreTemporaryFileName, smallReport.badFiles.join('\n'));
+  fs.writeFileSync(ignoreFilePath, smallReport.badFiles.join('\n'));
   const end = now();
   debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
 }
 
 
-function checkGood(files, eslintPath) {
-  const ignoredFiles = getIgnoredFiles(files);
+function checkGood(files, eslintPath, ignoreFilePath) {
+  const ignoredFiles = getIgnoredFiles(files, ignoreFilePath);
   const start = now();
-  const smallReport = lintAll({files, eslintPath});
+  const smallReport = lintAll({files, eslintPath, ignoreFilePath});
   const nowGood = ignoredFiles.filter(item => !smallReport.badFiles.includes(item));
   if (nowGood.length) {
     const end = now();
@@ -55,10 +52,11 @@ function checkGood(files, eslintPath) {
   }
 }
 
-function lint(files, eslintPath)
-{
+function lint(files, eslintPath, ignoreFilePath) {
   const start = now();
-  const smallReport = lintAll({ignoreBad: true, files, eslintPath});
+  const smallReport = lintAll({
+    ignoreBad: true, files, eslintPath, ignoreFilePath,
+  });
   const badFilesFound = smallReport.badFiles;
   if (badFilesFound.length) {
     const end = now();
@@ -81,50 +79,53 @@ function lint(files, eslintPath)
   }
 }
 
-function fixFilesArgs(files)
-{
+function fixFilesArgs(files) {
   if (!files || !files.length) {
     return null;
   }
   return files
-    .map(file=>file.trim());
+    .map(file => file.trim())
+    .map(file=>path.resolve(file));
 }
 
-function logArgs(allFiles, argv)
-{
-  debug(`Checking paths: "${allFiles.join('", "')}"\nUsing ESLint path: "${path.resolve(process.cwd(), argv.eslintPath)}"`);
+function logArgs(allFiles, argv) {
+  debug(`Checking paths:\n\t"${allFiles.join('",\n\t"')}"\nUsing ESLint path: "${path.resolve(process.cwd(), argv.eslintPath)}"`);
 }
 
 // eslint-disable-next-line no-unused-expressions
 program.usage('Usage: $0 <command> [options]')
-  .command('lint', 'Lint everything but bad files', {}, (argv)=>{
+  .command('lint', 'Lint everything but bad files', {}, (argv) => {
     const allFiles = fixFilesArgs(argv.files);
     logArgs(allFiles, argv);
-    lint(allFiles, argv.eslintPath);
+    lint(allFiles, argv.eslintPath, argv.ignoreFilePath);
   })
-  .command('check-good', 'Check if good files are listed as bad', {}, (argv)=>{
+  .command('check-good', 'Check if good files are listed as bad', {}, (argv) => {
     const allFiles = fixFilesArgs(argv.files);
     logArgs(allFiles, argv);
-    checkGood(allFiles, argv.eslintPath);
+    checkGood(allFiles, argv.eslintPath, argv.ignoreFilePath);
   })
-  .command('save-ignored', 'Make a new list of ignored files (don`t abuse please)', {}, (argv)=>{
+  .command('save-ignored', 'Make a new list of ignored files (don`t abuse please)', {}, (argv) => {
     const allFiles = fixFilesArgs(argv.files);
     logArgs(allFiles, argv);
-    saveIgnored(allFiles, argv.eslintPath);
+    saveIgnored(allFiles, argv.eslintPath, argv.ignoreFilePath);
   })
   .example('$0 lint --files bin test --eslint-path ~/project1/node_modules/eslint', 'lint bin and test dirs using linter from project1')
   .option('files', {
     type: 'array',
-    alias: 'f',
     demandOption: true,
     describe: 'filenames',
   })
   .option('eslintPath', {
     type: 'string',
-    alias: 'es',
     nargs: 1,
     describe: 'eslint path',
-    demandOption: true,
+    default: './node_modules/eslint',
+  })
+  .option('ignoreFilePath', {
+    type: 'string',
+    nargs: 1,
+    describe: 'path for .slowlintignore file',
+    default: '.slowlintignore',
   })
   .help('h')
   .alias('h', 'help')
