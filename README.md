@@ -91,9 +91,19 @@ Commands:
   slowlint save-ignored  Make a new list of ignored files
 
 Options:
-  --version           Show version number                      [boolean]
-  --files             filenames                                [array]  [required]
-  --eslintPath        eslint path                              [string] [required]
-  --ignoreFilePath    path for .slowlintignore file            [string]
-  --help, h           Show help                                [boolean]
+Options:
+  --version         Show version number               [boolean]
+  --files           filenames                         [array] [required]
+  --eslintPath      eslint path                       [string] [default: "./node_modules/eslint"]
+  --ignoreFilePath  path for .slowlintignore file     [string] [default: ".slowlintignore"]
+  --noProgress      hide progress bar                 [boolean] [default: false]
+  -h, --help        Show help                         [boolean]
 ```
+
+
+## Examples:
+```bash
+slowlint lint --files bin test --eslint-path ~/project1/node_modules/eslin
+```
+
+lint `bin` and `test` dirs using linter from some project1.
