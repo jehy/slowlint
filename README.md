@@ -102,8 +102,13 @@ Options:
 
 
 ## Examples:
+Lint all files from project in current diirectory using linter and config from project:
+
 ```bash
-slowlint lint --files bin test --eslint-path ~/project1/node_modules/eslin
+slowlint lint --files .
+```
+Lint `bin` and `test` dirs using linter from some project1:
+```bash
+slowlint lint --files bin test --eslint-path ~/project1/node_modules/eslint
 ```
 
-lint `bin` and `test` dirs using linter from some project1.
