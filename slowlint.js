@@ -1,10 +1,14 @@
 'use strict';
 
 const fs = require('fs');
-
 const path = require('path');
+const CliProgress = require('cli-progress');
+const Promise = require('bluebird');
+
 
 const ignoreForeverFileName = '.eslintignore';
+const cwd = process.cwd();
+const {exec} = require('child_process');
 
 function debug(...args)
 {
@@ -12,44 +16,59 @@ function debug(...args)
 }
 
 function getIgnoredFiles(files, ignoreFilePath) {
-  try {
-    const allIgnored = fs.readFileSync(ignoreFilePath, 'utf-8')
-      .split('\n');
-    if (files[0] === '.')
-    {
-      return allIgnored;
-    }
-    return allIgnored
-      .filter(fname=>files.some(fileOption=>path.resolve(fname).startsWith(fileOption)));
+  if (!fs.existsSync(ignoreFilePath))
+  {
+    debug(`ignore file not found in path ${ignoreFilePath}, assuming there are no ignores`);
+    return [];
   }
-  catch (e) {
-    debug(e);
-    debug('could not read bad file list, assuming all files are good. Haha!');
+  const allIgnored = fs.readFileSync(ignoreFilePath, 'utf-8')
+    .split('\n')
+    .map(file=>file.trim())
+    .filter(file=>file)
+    .map(file=>path.resolve(ignoreFilePath, '../', file).replace(`${cwd}/`, ''));
+  if (files[0] === '.')
+  {
+    return allIgnored;
   }
-  return [];
+  return allIgnored
+    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck)));
+
 }
 
 function getIgnoredForeverFiles(files) {
-  try {
-    if (!fs.existsSync(ignoreForeverFileName))
-    {
-      return [];
-    }
-    const allIgnored =  fs.readFileSync(ignoreForeverFileName, 'utf-8')
-      .split('\n');
-    if (files[0] === '.')
-    {
-      return allIgnored;
-    }
-    return allIgnored
-      .filter(fname=>files.some(fileOption=>path.resolve(fname).startsWith(fileOption)));
-  }
-  catch (e) {
-    debug(e);
+  if (!fs.existsSync(ignoreForeverFileName))
+  {
     return [];
   }
+  const allIgnored =  fs.readFileSync(ignoreForeverFileName, 'utf-8')
+    .split('\n')
+    .map(file=>file.trim())
+    .filter(file=>file)
+    .map(file=>path.resolve(ignoreForeverFileName, '../', file).replace(cwd, ''));
+  if (files[0] === '.')
+  {
+    return allIgnored;
+  }
+  return allIgnored
+    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck)));
 }
 
+async function countFiles(files)
+{
+  return Promise.reduce(files, (res, file)=>{
+    return new Promise((resolve, reject)=>{
+      exec(`find ${file} -type f -name "*.js" ! -path "*/node_modules/*" | wc -l`, (error, stdout, stderr) => {
+        if (error)
+        {
+          reject(error);
+          return;
+        }
+        resolve(res + parseInt(stdout, 10));
+      });
+    });
+  }, 0)
+    .catch(err=>debug(err));
+}
 /**
  *
  * @param {Object} [options]
@@ -60,8 +79,20 @@ function getIgnoredForeverFiles(files) {
  * @returns {Object} bad files's filenames and a number of good files
  */
 
-function lintAll(options = {}) {
-  const eslintPath = path.resolve(process.cwd(), options.eslintPath);
+async function lintAll(options = {}) {
+  let progressBar;
+  let showProgress = !options.noProgress;
+  let total = 0;
+  if (showProgress)
+  {
+    total = await countFiles(options.files);
+  }
+  if (!total)
+  {
+    showProgress = false;
+  }
+  // debug(`lintAll options: ${JSON.stringify(options, null, 3)}`);
+  const eslintPath = path.resolve(cwd, options.eslintPath);
   // eslint-disable-next-line global-require,import/no-dynamic-require
   const {CLIEngine} = require(eslintPath);
   const opts = {
@@ -74,6 +105,17 @@ function lintAll(options = {}) {
     ignoredFilesNum = ignoredFiles.length;
     opts.ignorePattern = opts.ignorePattern.concat(ignoredFiles);
   }
+  total -= opts.ignorePattern.length;
+  if (showProgress)
+  {
+    progressBar = new CliProgress.Bar({
+      format: 'Linting [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}',
+      etaBuffer: 200,
+      fps: 1,
+    }, CliProgress.Presets.shades_classic);
+    progressBar.start(total, 0);
+  }
+  // debug(`lintAll opts: ${JSON.stringify(opts, null, 3)}`);
   const cli = new CLIEngine(opts);
   let counter = 0;
   cli.addPlugin('counter', {
@@ -81,6 +123,10 @@ function lintAll(options = {}) {
       '.js': {
         preprocess(text) {
           counter++;
+          if (showProgress)
+          {
+            progressBar.update(counter);
+          }
           return [text];
         },
         postprocess(messages) {
@@ -94,12 +140,16 @@ function lintAll(options = {}) {
   const report = cli.executeOnFiles(options.files || ['.']);
   const formatter = cli.getFormatter();
   const errorReport = CLIEngine.getErrorResults(report.results);
-  const curDir = `${process.cwd()}/`;
   const badFilesFound = errorReport
-    .map(data => data.filePath.replace(curDir, ''));
+    .map(data => data.filePath.replace(`${cwd}/`, ''));
   let logs = formatter(errorReport);
   if (logs.length > 1000) {
     logs = `${logs.substr(0, 1000)}...`;
+  }
+  if (showProgress)
+  {
+    progressBar.setTotal(counter);
+    progressBar.stop();
   }
   return {
     ignoredFilesNum,

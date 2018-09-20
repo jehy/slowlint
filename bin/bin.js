@@ -17,25 +17,59 @@ function debug(...args) {
   console.log(args.join(' '));
 }
 
-function saveIgnored(files, eslintPath, ignoreFilePath) {
+const cwd = process.cwd();
+
+
+function logArgs(argv) {
+  if (argv.files.length === 1)
+  {
+    debug(`Checking path:  "${argv.files[0]}"`);
+  }
+  else
+  {
+    debug(`Checking paths:\n\t"${argv.files.join('",\n\t"')}"`);
+  }
+  debug(`Using ESLint path: "${path.resolve(cwd, argv.eslintPath)}"`);
+  if (argv.ignoreFilePath)
+  {
+    debug(`Using SlowLint ignore file: "${path.resolve(cwd, argv.ignoreFilePath)}"`);
+  }
+  else
+  {
+    debug('Not using SlowLint ignore file.');
+  }
+}
+
+async function saveIgnored(argv) {
+  logArgs(argv);
+  const {
+    ignoreFilePath,
+  } = argv;
   const start = now();
-  const smallReport = lintAll({files, eslintPath, ignoreFilePath});
+  const smallReport = await lintAll(argv);
   debug(`Linter passing: ${smallReport.goodFilesNum}`);
   debug(`Linter not passing: ${smallReport.badFilesNum}`);
-  fs.writeFileSync(ignoreFilePath, smallReport.badFiles.join('\n'));
+  const badFilesRelative = smallReport.badFiles
+    .map(file=>path.resolve(file).replace(`${path.resolve(ignoreFilePath, '../')}/`, ''));
+  fs.writeFileSync(ignoreFilePath, badFilesRelative.join('\n'));
   const end = now();
-  debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
+  debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
 }
 
 
-function checkGood(files, eslintPath, ignoreFilePath) {
+async function checkGood(argv) {
+  logArgs(argv);
+  const {
+    files,
+    ignoreFilePath,
+  } = argv;
   const ignoredFiles = getIgnoredFiles(files, ignoreFilePath);
   const start = now();
-  const smallReport = lintAll({files, eslintPath, ignoreFilePath});
+  const smallReport = await lintAll(argv);
   const nowGood = ignoredFiles.filter(item => !smallReport.badFiles.includes(item));
   if (nowGood.length) {
     const end = now();
-    debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
+    debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
     debug(`Linter passing: ${smallReport.goodFilesNum}`);
     debug(`Linter not passing: ${smallReport.badFilesNum}`);
     debug(`Linter ignored: ${smallReport.ignoredFilesNum}`);
@@ -46,21 +80,20 @@ function checkGood(files, eslintPath, ignoreFilePath) {
   }
   else {
     const end = now();
-    debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
+    debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
     debug('No new good files. That`s sad but okay.');
     process.exit(0);
   }
 }
 
-function lint(files, eslintPath, ignoreFilePath) {
+async function lint(argv) {
+  logArgs(argv);
   const start = now();
-  const smallReport = lintAll({
-    ignoreBad: true, files, eslintPath, ignoreFilePath,
-  });
+  const smallReport = await lintAll(Object.assign({}, argv, {ignoreBad: true}));
   const badFilesFound = smallReport.badFiles;
   if (badFilesFound.length) {
     const end = now();
-    debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
+    debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
     debug(`Linter passing: ${smallReport.goodFilesNum}`);
     debug(`Linter not passing: ${smallReport.badFilesNum}`);
     debug(`Linter ignored: ${smallReport.ignoredFilesNum}`);
@@ -71,7 +104,7 @@ function lint(files, eslintPath, ignoreFilePath) {
   }
   else {
     const end = now();
-    debug(`Linting took ${((end - start) / 1000).toFixed(3)} seconds`);
+    debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
     debug(`Linter passing: ${smallReport.goodFilesNum}`);
     debug(`Linter ignored: ${smallReport.ignoredFilesNum}`);
     debug('Linting went fine, you are cool, dude!');
@@ -79,36 +112,11 @@ function lint(files, eslintPath, ignoreFilePath) {
   }
 }
 
-function fixFilesArgs(files) {
-  if (!files || !files.length) {
-    return null;
-  }
-  return files
-    .map(file => file.trim())
-    .map(file=>path.resolve(file));
-}
-
-function logArgs(allFiles, argv) {
-  debug(`Checking paths:\n\t"${allFiles.join('",\n\t"')}"\nUsing ESLint path: "${path.resolve(process.cwd(), argv.eslintPath)}"`);
-}
-
 // eslint-disable-next-line no-unused-expressions
 program.usage('Usage: $0 <command> [options]')
-  .command('lint', 'Lint everything but bad files', {}, (argv) => {
-    const allFiles = fixFilesArgs(argv.files);
-    logArgs(allFiles, argv);
-    lint(allFiles, argv.eslintPath, argv.ignoreFilePath);
-  })
-  .command('check-good', 'Check if good files are listed as bad', {}, (argv) => {
-    const allFiles = fixFilesArgs(argv.files);
-    logArgs(allFiles, argv);
-    checkGood(allFiles, argv.eslintPath, argv.ignoreFilePath);
-  })
-  .command('save-ignored', 'Make a new list of ignored files (don`t abuse please)', {}, (argv) => {
-    const allFiles = fixFilesArgs(argv.files);
-    logArgs(allFiles, argv);
-    saveIgnored(allFiles, argv.eslintPath, argv.ignoreFilePath);
-  })
+  .command('lint', 'Lint everything but bad files', {}, lint)
+  .command('check-good', 'Check if good files are listed as bad', {}, checkGood)
+  .command('save-ignored', 'Make a new list of ignored files (don`t abuse please)', {}, saveIgnored)
   .example('$0 lint --files bin test --eslint-path ~/project1/node_modules/eslint', 'lint bin and test dirs using linter from project1')
   .option('files', {
     type: 'array',
@@ -126,6 +134,12 @@ program.usage('Usage: $0 <command> [options]')
     nargs: 1,
     describe: 'path for .slowlintignore file',
     default: '.slowlintignore',
+  })
+  .option('noProgress', {
+    type: 'boolean',
+    nargs: 0,
+    default: false,
+    describe: 'hide progress bar',
   })
   .help('h')
   .alias('h', 'help')
