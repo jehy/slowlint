@@ -13,7 +13,9 @@
   },
   "extends": "airbnb-base",
   "plugins": [
-    "standard"
+    "standard",
+    "import",
+    "promise"
   ],
   "rules": {
     "strict": [
