@@ -1,5 +1,7 @@
 # Slowlint
 
+[![npm](https://img.shields.io/npm/v/slowlint.svg)](https://npm.im/slowlint)
+[![license](https://img.shields.io/npm/l/slowlint.svg)](https://npm.im/slowlint)
 [![Build Status](https://travis-ci.org/jehy/slowlint.svg?branch=master)](https://travis-ci.org/jehy/slowlint)
 [![dependencies Status](https://david-dm.org/jehy/slowlint/status.svg)](https://david-dm.org/jehy/slowlint)
 [![devDependencies Status](https://david-dm.org/jehy/slowlint/dev-status.svg)](https://david-dm.org/jehy/slowlint?type=dev)
