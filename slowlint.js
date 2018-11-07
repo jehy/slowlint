@@ -109,23 +109,28 @@ async function lintAll(options = {}) {
   if (showProgress)
   {
     progressBar = new CliProgress.Bar({
-      format: 'Linting [{bar}] {percentage}% | ETA: {eta}s | {value}/{total}',
+      format: 'Linting [{bar}] {percentage}% | ETA: {eta}s | Processed: {value}/{total} | Current: {currentFile}',
       etaBuffer: 200,
       fps: 1,
     }, CliProgress.Presets.shades_classic);
-    progressBar.start(total, 0);
+    progressBar.start(total, 0, {
+      currentFile: 'N/A',
+    });
   }
   // debug(`lintAll opts: ${JSON.stringify(opts, null, 3)}`);
   const cli = new CLIEngine(opts);
   let counter = 0;
+  const myPath = path.resolve('.');
   cli.addPlugin('counter', {
     processors: {
       '.js': {
-        preprocess(text) {
+        preprocess(text, filename) {
           counter++;
           if (showProgress)
           {
-            progressBar.update(counter);
+            progressBar.update(counter, {
+              currentFile: filename.replace(myPath, ''),
+            });
           }
           return [text];
         },
