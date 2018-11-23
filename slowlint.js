@@ -31,7 +31,7 @@ function getIgnoredFiles(files, ignoreFilePath) {
     return allIgnored;
   }
   return allIgnored
-    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck)));
+    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck.replace(`${cwd}/`, ''))));
 
 }
 

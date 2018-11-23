@@ -3,7 +3,7 @@
   "bin": {
     "slowlint": "bin/bin.js"
   },
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Slowly implement linting",
   "repository": {
     "type": "git",
@@ -22,13 +22,13 @@
     "bluebird": "~3.5.3",
     "cli-progress": "~2.1.0",
     "performance-now": "~2.1.0",
-    "yargs": "~12.0.2"
+    "yargs": "~12.0.5"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "coveralls": "^3.0.2",
     "debug": "^4.1.0",
-    "eslint": "^5.8.0",
+    "eslint": "^5.9.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-loader": "^2.1.1",
     "eslint-plugin-import": "^2.14.0",
