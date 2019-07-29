@@ -97,6 +97,7 @@ async function lintAll(options = {}) {
   const {CLIEngine} = require(eslintPath);
   const opts = {
     useEslintrc: true,
+    plugins: ['counter'],
   };
   let ignoredFilesNum = 0;
   opts.ignorePattern = getIgnoredForeverFiles(options.files);
