@@ -20,26 +20,26 @@
   },
   "author": "Jehy http://github.com/jehy",
   "dependencies": {
-    "bluebird": "~3.5.5",
-    "cli-progress": "~2.1.1",
+    "bluebird": "~3.7.2",
+    "cli-progress": "~3.8.2",
     "performance-now": "~2.1.0",
-    "yargs": "~13.3.0"
+    "yargs": "~15.4.1"
   },
   "peerDependencies": {
-    "eslint": "^6.1.0"
+    "eslint": "^7.5.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "coveralls": "^3.0.5",
+    "coveralls": "^3.1.0",
     "debug": "^4.1.1",
-    "eslint": "^6.1.0",
-    "eslint-config-airbnb-base": "^13.2.0",
-    "eslint-loader": "^2.2.1",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint": "^7.5.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-loader": "^4.0.2",
+    "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "mocha": "^6.2.0",
-    "nyc": "^14.1.1"
+    "eslint-plugin-standard": "^4.0.1",
+    "mocha": "^8.0.1",
+    "nyc": "^15.1.0"
   },
   "engines": {
     "node": ">=8"

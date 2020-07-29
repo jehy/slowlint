@@ -7,7 +7,6 @@ const now = require('performance-now');
 const program = require('yargs');
 const path = require('path');
 
-
 const {
   lintAll,
   getIgnoredFiles,
@@ -18,7 +17,6 @@ function debug(...args) {
 }
 
 const cwd = process.cwd();
-
 
 function logArgs(argv) {
   if (argv.files.length === 1)
@@ -50,12 +48,11 @@ async function saveIgnored(argv) {
   debug(`Linter passing: ${smallReport.goodFilesNum}`);
   debug(`Linter not passing: ${smallReport.badFilesNum}`);
   const badFilesRelative = smallReport.badFiles
-    .map(file=>path.resolve(file).replace(`${path.resolve(ignoreFilePath, '../')}/`, ''));
+    .map((file)=>path.resolve(file).replace(`${path.resolve(ignoreFilePath, '../')}/`, ''));
   fs.writeFileSync(ignoreFilePath, badFilesRelative.join('\n'));
   const end = now();
   debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
 }
-
 
 async function checkGood(argv) {
   logArgs(argv);
@@ -66,7 +63,7 @@ async function checkGood(argv) {
   const ignoredFiles = getIgnoredFiles(files, ignoreFilePath);
   const start = now();
   const smallReport = await lintAll(argv);
-  const nowGood = ignoredFiles.filter(item => !smallReport.badFiles.includes(item));
+  const nowGood = ignoredFiles.filter((item) => !smallReport.badFiles.includes(item));
   if (nowGood.length) {
     const end = now();
     debug(`Linting took ${((end - start) / 1000).toFixed(2)} seconds`);
@@ -89,7 +86,7 @@ async function checkGood(argv) {
 async function lint(argv) {
   logArgs(argv);
   const start = now();
-  const smallReport = await lintAll(Object.assign({}, argv, {ignoreBad: true}));
+  const smallReport = await lintAll({ ...argv, ignoreBad: true});
   const badFilesFound = smallReport.badFiles;
   if (badFilesFound.length) {
     const end = now();

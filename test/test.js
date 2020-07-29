@@ -8,7 +8,6 @@ const {assert} = require('chai');
 const debug = Debug('slowlint:tests');
 debug.enabled = true;
 
-
 async function spawnPromise(program2, args, options) {
 
   const display = `Running ${program2} ${args.join(' ')}`;

@@ -5,7 +5,6 @@ const path = require('path');
 const CliProgress = require('cli-progress');
 const Promise = require('bluebird');
 
-
 const ignoreForeverFileName = '.eslintignore';
 const cwd = process.cwd();
 const {exec} = require('child_process');
@@ -23,15 +22,15 @@ function getIgnoredFiles(files, ignoreFilePath) {
   }
   const allIgnored = fs.readFileSync(ignoreFilePath, 'utf-8')
     .split('\n')
-    .map(file=>file.trim())
-    .filter(file=>file)
-    .map(file=>path.resolve(ignoreFilePath, '../', file).replace(`${cwd}/`, ''));
+    .map((file)=>file.trim())
+    .filter((file)=>file)
+    .map((file)=>path.resolve(ignoreFilePath, '../', file).replace(`${cwd}/`, ''));
   if (files[0] === '.')
   {
     return allIgnored;
   }
   return allIgnored
-    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck.replace(`${cwd}/`, ''))));
+    .filter((ignoredFileName)=>files.some((fileIncludedInCheck)=>ignoredFileName.startsWith(fileIncludedInCheck.replace(`${cwd}/`, ''))));
 
 }
 
@@ -42,15 +41,15 @@ function getIgnoredForeverFiles(files) {
   }
   const allIgnored =  fs.readFileSync(ignoreForeverFileName, 'utf-8')
     .split('\n')
-    .map(file=>file.trim())
-    .filter(file=>file)
-    .map(file=>path.resolve(ignoreForeverFileName, '../', file).replace(cwd, ''));
+    .map((file)=>file.trim())
+    .filter((file)=>file)
+    .map((file)=>path.resolve(ignoreForeverFileName, '../', file).replace(cwd, ''));
   if (files[0] === '.')
   {
     return allIgnored;
   }
   return allIgnored
-    .filter(ignoredFileName=>files.some(fileIncludedInCheck=>ignoredFileName.startsWith(fileIncludedInCheck)));
+    .filter((ignoredFileName)=>files.some((fileIncludedInCheck)=>ignoredFileName.startsWith(fileIncludedInCheck)));
 }
 
 async function countFiles(files)
@@ -67,7 +66,7 @@ async function countFiles(files)
       });
     });
   }, 0)
-    .catch(err=>debug(err));
+    .catch((err)=>debug(err));
 }
 /**
  *
@@ -140,14 +139,13 @@ async function lintAll(options = {}) {
         },
       },
 
-
     },
   });
   const report = cli.executeOnFiles(options.files || ['.']);
   const formatter = cli.getFormatter();
   const errorReport = CLIEngine.getErrorResults(report.results);
   const badFilesFound = errorReport
-    .map(data => data.filePath.replace(`${cwd}/`, ''));
+    .map((data) => data.filePath.replace(`${cwd}/`, ''));
   let logs = formatter(errorReport);
   if (logs.length > 1000) {
     logs = `${logs.substr(0, 1000)}...`;
